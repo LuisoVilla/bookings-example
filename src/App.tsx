@@ -1,5 +1,14 @@
-import { useMemo, useState } from 'react'
-import { Box, Button, Container, IconButton, Stack, Tooltip, Typography } from '@mui/material'
+import { useEffect, useMemo, useState } from 'react'
+import {
+  Box,
+  Button,
+  CircularProgress,
+  Container,
+  IconButton,
+  Stack,
+  Tooltip,
+  Typography,
+} from '@mui/material'
 import DarkModeIcon from '@mui/icons-material/DarkMode'
 import LightModeIcon from '@mui/icons-material/LightMode'
 import { BookingsPage } from './bookings/BookingsPage'
@@ -9,12 +18,39 @@ import { useColorMode } from './theme/colorMode'
 
 export default function App() {
   const [authed, setAuthed] = useState(() => isAuthenticated())
+  const [loginTransitioning, setLoginTransitioning] = useState(false)
   const { mode, toggle } = useColorMode()
 
   const username = useMemo(() => (authed ? getAuthenticatedUsername() : null), [authed])
 
+  useEffect(() => {
+    if (!loginTransitioning) return
+    const t = window.setTimeout(() => setLoginTransitioning(false), 2000)
+    return () => window.clearTimeout(t)
+  }, [loginTransitioning])
+
   if (!authed) {
-    return <LoginPage onSuccess={() => setAuthed(true)} />
+    return (
+      <LoginPage
+        onSuccess={() => {
+          setLoginTransitioning(true)
+          setAuthed(true)
+        }}
+      />
+    )
+  }
+
+  if (loginTransitioning) {
+    return (
+      <Container maxWidth="xs" sx={{ py: 10 }}>
+        <Stack spacing={2.5} alignItems="center">
+          <CircularProgress />
+          <Typography variant="body2" color="text.secondary">
+            Signing you in…
+          </Typography>
+        </Stack>
+      </Container>
+    )
   }
 
   return (
@@ -35,6 +71,7 @@ export default function App() {
               variant="text"
               onClick={() => {
                 logout()
+                setLoginTransitioning(false)
                 setAuthed(false)
               }}
             >
