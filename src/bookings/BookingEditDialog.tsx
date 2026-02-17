@@ -1,15 +1,17 @@
 import { Dialog, DialogContent, Grow } from '@mui/material'
 import type { Booking, BookingDraft } from './types'
 import { BookingForm } from './BookingForm'
+import { validateDraft, validateNoOverlap } from './validation'
 
 type Props = {
   open: boolean
   booking: Booking | null
+  existingBookings: Booking[]
   onSubmit: (draft: BookingDraft) => void
   onClose: () => void
 }
 
-export function BookingEditDialog({ open, booking, onSubmit, onClose }: Props) {
+export function BookingEditDialog({ open, booking, existingBookings, onSubmit, onClose }: Props) {
   return (
     <Dialog
       open={open}
@@ -28,6 +30,9 @@ export function BookingEditDialog({ open, booking, onSubmit, onClose }: Props) {
             initialDraft={{ startDate: booking.startDate, endDate: booking.endDate }}
             onSubmit={onSubmit}
             onCancel={onClose}
+            validate={(draft) =>
+              validateDraft(draft) ?? validateNoOverlap(draft, existingBookings, booking.id)
+            }
           />
         ) : null}
       </DialogContent>

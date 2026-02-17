@@ -9,6 +9,11 @@ Use these default credentials:
 - Username: `user`
 - Password: `123456`
 
+## UX notes
+
+- Inline form validation (required dates, start <= end, and no-overlap) with keyboard submit (Enter).
+- Light/Dark mode toggle (top-right), persisted in `localStorage`.
+
 ## Tech
 
 - React + TypeScript (Vite)

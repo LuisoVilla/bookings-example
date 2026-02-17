@@ -7,6 +7,10 @@ import { BookingForm } from './BookingForm'
 import { BookingsList } from './BookingsList'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { BookingEditDialog } from './BookingEditDialog'
+import { validateDraft, validateNoOverlap } from './validation'
+import { formatIsoDate } from './date'
+
+const CREATE_START_DATE_INPUT_ID = 'create-booking-start-date'
 
 export function BookingsPage() {
   const bookings = useBookingsStore((s) => s.bookings)
@@ -83,6 +87,33 @@ export function BookingsPage() {
     setDeleteCandidateIds([...selectedIds])
   }
 
+  function focusCreateForm() {
+    const el = document.getElementById(CREATE_START_DATE_INPUT_ID)
+    if (!el) return
+    el.scrollIntoView({ block: 'center' })
+    ;(el as HTMLElement).focus()
+  }
+
+  const deleteDescription = useMemo(() => {
+    if (!deleteCandidateIds || deleteCandidateIds.length === 0) return undefined
+
+    const candidates = deleteCandidateIds
+      .map((id) => bookings.find((b) => b.id === id))
+      .filter(Boolean)
+      .map((b) => `${formatIsoDate(b!.startDate)} → ${formatIsoDate(b!.endDate)}`)
+
+    if (deleteCandidateIds.length === 1) {
+      const range = candidates[0]
+      return range
+        ? `This will delete booking ${range}. This action cannot be undone.`
+        : 'This action cannot be undone.'
+    }
+
+    const preview = candidates.slice(0, 3).join(', ')
+    const suffix = candidates.length > 3 ? ', …' : ''
+    return `This will delete ${deleteCandidateIds.length} bookings (${preview}${suffix}). This action cannot be undone.`
+  }, [bookings, deleteCandidateIds])
+
   return (
     <Container maxWidth="md" sx={{ py: 3 }}>
       <Stack spacing={2}>
@@ -99,6 +130,8 @@ export function BookingsPage() {
           mode="create"
           initialDraft={{ startDate: '', endDate: '' }}
           onSubmit={handleCreate}
+          validate={(draft) => validateDraft(draft) ?? validateNoOverlap(draft, bookings)}
+          startDateInputId={CREATE_START_DATE_INPUT_ID}
         />
 
         <BookingsList
@@ -109,11 +142,13 @@ export function BookingsPage() {
           onDeleteSelected={requestDeleteSelected}
           onEdit={beginEdit}
           onDelete={requestDelete}
+          onCreateFirstBooking={focusCreateForm}
         />
 
         <BookingEditDialog
           open={editCandidateId != null}
           booking={sortedBookings.find((b) => b.id === editCandidateId) ?? null}
+          existingBookings={bookings}
           onSubmit={handleEditSubmit}
           onClose={closeEdit}
         />
@@ -121,11 +156,7 @@ export function BookingsPage() {
         <ConfirmDialog
           open={deleteCandidateIds != null}
           title="Delete booking?"
-          description={
-            deleteCandidateIds && deleteCandidateIds.length > 1
-              ? `This will delete ${deleteCandidateIds.length} bookings. This action cannot be undone.`
-              : 'This action cannot be undone.'
-          }
+          description={deleteDescription}
           confirmText="Delete"
           cancelText="Cancel"
           onConfirm={confirmDelete}

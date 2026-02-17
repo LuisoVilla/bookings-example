@@ -1,20 +1,20 @@
 import {
   Checkbox,
-  Collapse,
   Divider,
   IconButton,
-  List,
-  ListItem,
-  ListItemSecondaryAction,
-  ListItemText,
   Paper,
   Stack,
   Button,
   Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
 } from '@mui/material'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
-import { TransitionGroup } from 'react-transition-group'
 import { formatIsoDate } from './date'
 import type { Booking } from './types'
 
@@ -26,6 +26,7 @@ type Props = {
   onDeleteSelected: () => void
   onEdit: (id: string) => void
   onDelete: (id: string) => void
+  onCreateFirstBooking?: () => void
 }
 
 export function BookingsList({
@@ -36,6 +37,7 @@ export function BookingsList({
   onDeleteSelected,
   onEdit,
   onDelete,
+  onCreateFirstBooking,
 }: Props) {
   const selectedCount = selectedIds.length
 
@@ -68,57 +70,77 @@ export function BookingsList({
         <Divider />
 
         {bookings.length === 0 ? (
-          <Typography variant="body2" color="text.secondary">
-            No bookings yet.
-          </Typography>
+          <Stack spacing={1} alignItems="flex-start">
+            <Typography variant="body2" color="text.secondary">
+              No bookings yet — create your first one above.
+            </Typography>
+            {onCreateFirstBooking ? (
+              <Button size="small" variant="outlined" onClick={onCreateFirstBooking}>
+                Create your first booking
+              </Button>
+            ) : null}
+          </Stack>
         ) : (
-          <List disablePadding>
-            <TransitionGroup component={null}>
-              {bookings.map((b) => {
-                const primary = `${formatIsoDate(b.startDate)} → ${formatIsoDate(b.endDate)}`
-                const isSelected = b.id === selectedId
-                const secondary = isSelected ? 'Selected' : undefined
-                const isChecked = selectedIds.includes(b.id)
+          <TableContainer>
+            <Table size="small" aria-label="bookings table">
+              <TableHead>
+                <TableRow>
+                  <TableCell />
+                  <TableCell align="center">Select</TableCell>
+                  <TableCell align="center">Edit</TableCell>
+                  <TableCell align="center">Delete</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {bookings.map((b) => {
+                  const primary = `${formatIsoDate(b.startDate)} → ${formatIsoDate(b.endDate)}`
+                  const isSelected = b.id === selectedId
+                  const secondary = isSelected ? 'Selected' : undefined
+                  const isChecked = selectedIds.includes(b.id)
 
-                return (
-                  <Collapse key={b.id} timeout={200}>
-                    <ListItem
-                      divider
-                      sx={(theme) => ({
-                        alignItems: 'flex-start',
-                        transition: theme.transitions.create(['background-color'], {
-                          duration: theme.transitions.duration.shortest,
-                        }),
-                        bgcolor: isSelected ? 'action.selected' : 'transparent',
-                        '&:hover': { bgcolor: isSelected ? 'action.selected' : 'action.hover' },
-                        '&:last-of-type': { borderBottom: 'none' },
-                      })}
+                  return (
+                    <TableRow
+                      key={b.id}
+                      hover
+                      sx={{ bgcolor: isSelected ? 'action.selected' : 'transparent' }}
                     >
-                      <ListItemText primary={primary} secondary={secondary} />
-                      <ListItemSecondaryAction>
+                      <TableCell>
+                        <Stack spacing={0.25}>
+                          <Typography variant="body2">{primary}</Typography>
+                          {secondary ? (
+                            <Typography variant="caption" color="text.secondary">
+                              {secondary}
+                            </Typography>
+                          ) : null}
+                        </Stack>
+                      </TableCell>
+                      <TableCell align="center">
                         <Checkbox
                           checked={isChecked}
                           onChange={() => onToggleSelect(b.id)}
                           inputProps={{ 'aria-label': `select booking ${b.id}` }}
                         />
-                        <IconButton edge="end" aria-label="edit" onClick={() => onEdit(b.id)}>
+                      </TableCell>
+                      <TableCell align="center">
+                        <IconButton aria-label="edit" onClick={() => onEdit(b.id)}>
                           <EditIcon />
                         </IconButton>
+                      </TableCell>
+                      <TableCell align="center">
                         <IconButton
-                          edge="end"
                           aria-label="delete"
                           color="error"
                           onClick={() => onDelete(b.id)}
                         >
                           <DeleteIcon />
                         </IconButton>
-                      </ListItemSecondaryAction>
-                    </ListItem>
-                  </Collapse>
-                )
-              })}
-            </TransitionGroup>
-          </List>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+          </TableContainer>
         )}
       </Stack>
     </Paper>
