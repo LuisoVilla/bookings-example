@@ -2,6 +2,13 @@
 
 Single-page React app to create / read / update / delete bookings.
 
+## Login
+
+Use these default credentials:
+
+- Username: `user`
+- Password: `123456`
+
 ## Tech
 
 - React + TypeScript (Vite)
